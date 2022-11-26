@@ -3,7 +3,7 @@
 version = 3
 
 [[package]]
-name = "anomaly_detection"
+name = "Trie"
 version = "0.1.0"
 dependencies = [
  "serde",
