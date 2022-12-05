@@ -10,23 +10,23 @@ fn main() {
     let file = args[0].clone();
     let contents = fs::read_to_string(file).unwrap();
     let mut tree = CharTree::new();
-    let loaded = do_flag(&args, "-l", |path| {
-        let contents = fs::read_to_string(path).unwrap();
+    let loaded = do_flag::<1>(&args, "-l", |path| {
+        let contents = fs::read_to_string(path[0]).unwrap();
         tree = CharTree::from_string(contents);
     });
     if !loaded {
         tree.train(contents.clone());
     }
-    let mut saved = do_flag(&args, "-s", |path| {
-       fs::write(path, tree.to_string()).unwrap();
+    let mut saved = do_flag::<1>(&args, "-s", |path| {
+       fs::write(path[0], tree.to_string()).unwrap();
     });
-    if args.contains(&"-a".to_string()) {
+    saved = saved || do_flag::<0>(&args, "-a", |_| {
         saved = true;
         contents.lines()
-            .map(|line| tree.get_weirdness(&line))
-            .map(|weirdness| average(&weirdness)).enumerate()
-            .for_each(|(line, average)| println!("{}: {}", line + 1, average));
-    }
+        .map(|line| tree.get_weirdness(&line))
+        .map(|weirdness| average(&weirdness)).enumerate()
+        .for_each(|(line, average)| println!("{}: {}", line + 1, average));
+    });
     if !saved {
         println!("{:?}", tree.get_weirdness(&contents));
     }
@@ -36,10 +36,12 @@ fn average(nums: &Vec<u32>) -> f32 {
     nums.iter().sum::<u32>() as f32 / nums.len() as f32
 }
 
-fn do_flag(args: &Vec<String>, flag: &str, callback: impl FnOnce(&str) -> ()) -> bool {
+fn do_flag<const N: usize>(args: &Vec<String>, flag: &str, callback: impl FnOnce(&[&str; N]) -> ()) -> bool {
     for i in 0..args.len() {
         if args[i] == flag {
-            callback(&args[i + 1]);
+            let mut params = &[""; N];
+            args[i..].iter().take(N).enumerate().for_each(|(i, e)| params[i] = e);
+            callback(params);
             return true;
         }
     }

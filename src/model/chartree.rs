@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
 pub struct CharTree {
+    pub count: u32,
     root: Node
 }
 
@@ -15,6 +16,7 @@ struct Node {
 impl CharTree {
     pub fn new() -> CharTree {
         CharTree {
+            count: 0,
             root: Node {
                 count: 0,
                 children: HashMap::new()
@@ -34,6 +36,7 @@ impl CharTree {
     }
 
     fn put(&mut self, key: &[char]) {
+        self.count += 1;
         Self::put_recur(&mut self.root, key);
     }
 
