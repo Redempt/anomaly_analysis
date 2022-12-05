@@ -1,6 +1,8 @@
 //Julien Marcuse's code
-use std::{collections::HashMap, fs};
-use serde::{Serialize, Deserialize};
+use std::fs;
+use crate::model::chartree::CharTree;
+
+pub mod model;
 
 //Frequency analysis on the number of tokens in every line
 fn main() {
@@ -44,85 +46,3 @@ fn do_flag(args: &Vec<String>, flag: &str, callback: impl FnOnce(&str) -> ()) ->
     false
 }
 
-#[derive(Serialize, Deserialize)]
-struct CharTree {
-    root: Node
-}
-
-#[derive(Serialize, Deserialize)]
-struct Node {
-    count: u32,
-    children: HashMap<char, Node>,
-}
-
-impl CharTree {
-    fn new() -> CharTree {
-        CharTree {
-            root: Node {
-                count: 0,
-                children: HashMap::new()
-            }
-        }
-    }
-
-    fn from_string(string: String) -> CharTree {
-        serde_json::from_str(&string).unwrap()
-    }
-
-    fn train(&mut self, string: String) {
-        let chars: Vec<char> = string.chars().collect();
-        for i in 0..chars.len() {
-            self.put(&chars[i..]);
-        }
-    }
-
-    fn put(&mut self, key: &[char]) {
-        Self::put_recur(&mut self.root, key);
-    }
-
-    fn put_recur(node: &mut Node, key: &[char]) {
-        if key.is_empty() {
-            return;
-        }
-        node.count += 1;
-        let next = node.children.get_mut(&key[0]);
-        match next {
-            Some(n) => Self::put_recur(n, &key[1..]),
-            _ => {
-                node.children.insert(key[0], Node {
-                    count: 0,
-                    children: HashMap::new()
-                });
-            }
-        }
-    }
-
-    fn depth(&self, key: &[char]) -> u32 {
-        Self::depth_recur(&self.root, key)
-    }
-
-    fn depth_recur(node: &Node, key: &[char]) -> u32 {
-        if key.len() == 0 {
-            return 0;
-        }
-        match node.children.get(&key[0]) {
-            Some(n) => Self::depth_recur(&n, &key[1..]) + 1,
-            _ => 0
-        }
-    }
-
-    fn get_weirdness(&self, string: &str) -> Vec<u32> {
-        let mut weirdness = vec![];
-        let chars: Vec<char> = string.chars().collect();
-        for i in 0..chars.len() {
-            weirdness.push(self.depth(&chars[i..]));
-        }
-        weirdness
-    }
-}
-
-impl ToString for CharTree {
-    fn to_string(&self) -> String {
-        serde_json::to_string(&self).unwrap()
-    }
-}
