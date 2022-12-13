@@ -1,6 +1,6 @@
 //Julien Marcuse's code
-use std::fs;
 use crate::model::chartree::CharTree;
+use std::fs;
 
 pub mod model;
 
@@ -18,15 +18,18 @@ fn main() {
         tree.train(contents.clone());
     }
     let mut saved = do_flag::<1>(&args, "-s", |path| {
-       fs::write(path[0], tree.to_string()).unwrap();
+        fs::write(path[0], tree.to_string()).unwrap();
     });
-    saved = saved || do_flag::<0>(&args, "-a", |_| {
-        saved = true;
-        contents.lines()
-        .map(|line| tree.get_weirdness(&line))
-        .map(|weirdness| average(&weirdness)).enumerate()
-        .for_each(|(line, average)| println!("{}: {}", line + 1, average));
-    });
+    saved = saved
+        || do_flag::<0>(&args, "-a", |_| {
+            saved = true;
+            contents
+                .lines()
+                .map(|line| tree.get_weirdness(&line))
+                .map(|weirdness| average(&weirdness))
+                .enumerate()
+                .for_each(|(line, average)| println!("{}: {}", line + 1, average));
+        });
     if !saved {
         println!("{:?}", tree.get_weirdness(&contents));
     }
@@ -36,15 +39,22 @@ fn average(nums: &Vec<u32>) -> f32 {
     nums.iter().sum::<u32>() as f32 / nums.len() as f32
 }
 
-fn do_flag<const N: usize>(args: &Vec<String>, flag: &str, callback: impl FnOnce(&[&str; N]) -> ()) -> bool {
+fn do_flag<const N: usize>(
+    args: &Vec<String>,
+    flag: &str,
+    callback: impl FnOnce([&str; N]) -> (),
+) -> bool {
     for i in 0..args.len() {
         if args[i] == flag {
-            let mut params = &[""; N];
-            args[i..].iter().take(N).enumerate().for_each(|(i, e)| params[i] = e);
+            let mut params = [""; N];
+            args[i..]
+                .iter()
+                .take(N)
+                .enumerate()
+                .for_each(|(i, e)| params[i] = e);
             callback(params);
             return true;
         }
     }
     false
 }
-
