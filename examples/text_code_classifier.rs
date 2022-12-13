@@ -13,6 +13,6 @@ fn main() {
     println!("Model ready! Enter text to classify");
     loop {
         let line = read();
-        println!(": {}", classifier.classify(&line));
+        println!("classification: {}", classifier.classify(&line));
     }
 }
